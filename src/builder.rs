@@ -1,83 +1,77 @@
 // request builder
 // used for signing orders and stuff
 
-use crate::{request::*, AoriOrder};
-use alloy_primitives::{keccak256, B256};
-use alloy_serde_macro::{bytes, bytes_from_string};
-use alloy_sol_types::SolValue;
-use ethers::signers::LocalWallet;
-use ethers::{abi::parse_abi_str, utils::parse_bytes32_string};
+use alloy::{primitives::{Address, B256}, signers::{local::PrivateKeySigner, Signature, SignerSync}};
+
+use crate::{request::*, sign_order, AoriOrder};
 
 use super::get_order_hash;
 
 pub struct AoriRequestBuilder {
-    signer: LocalWallet,
+    signer: PrivateKeySigner,
 }
 
 impl AoriRequestBuilder {
     /// Wraps around a Private Key / Wallet to sign off on trades
     pub fn new(pkey_str: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let wallet: LocalWallet = pkey_str.parse().unwrap();
+        let wallet  = pkey_str.parse().unwrap();
         Ok(AoriRequestBuilder { signer: wallet })
     }
 
-    /// Builds an RFQ request
-    pub async fn build_rfq(
+    /// Builds a partial RFQ
+    pub async fn build_partial_rfq(
         &self,
+        address: Option<Address>,
         input_token: String,
         output_token: String,
         input_amount: Option<String>,
         output_amount: Option<String>,
         chain_id: i64,
-        api_key: String,
-    ) -> Result<AoriRequestQuoteParams, Box<dyn std::error::Error>> {
-        Ok(AoriRequestQuoteParams {
+    ) -> Result<AoriRfqParams, Box<dyn std::error::Error>> {
+        Ok(AoriRfqParams::Partial(AoriRfqPartialRequestParams {
+            address: address.unwrap_or(self.signer.address()).to_string(),
             input_token,
             output_token,
-            input_amount: input_amount.unwrap(),
+            input_amount: input_amount,
             output_amount,
             chain_id,
-            api_key,
-        })
+            zone: None,
+            deadline: None,
+        }))
     }
 
-    pub async fn make_order(
+    /// Builds a full RFQ
+    pub async fn build_full_rfq(
         &self,
-        order: AoriOrder,
-        is_public: bool,
-        seat_id: i64,
-        tag: String,
-    ) -> Result<AoriMakeOrderParams, Box<dyn std::error::Error>> {
-        let packed = get_order_hash(order.clone());
-        let hash = keccak256(packed);
+        address: Option<Address>,
+        input_token: String,
+        output_token: String,
+        input_amount: Option<String>,
+        output_amount: Option<String>,
+        chain_id: i64,
+    ) -> Result<AoriRfqParams, Box<dyn std::error::Error>> {
+        Ok(AoriRfqParams::Full(AoriRfqFullRequestParams {
 
-        let signature = self.signer.sign_hash(hash.0.into())?;
-        let sig_hex = hex::encode(signature.to_vec());
-
-        Ok(AoriMakeOrderParams {
-            order,
-            signature: format!("0x{}", sig_hex).into(),
-            is_public: Some(is_public),
-            seat_id: Some(seat_id),
-            tag: Some(tag),
-            api_key: None,
-        })
+            // TODO: make an order order from 
+            order: AoriOrder::default(),
+            signature: "".to_string(),
+            seat_id: None,
+        }))
     }
-    pub async fn take_order(
-        &self,
-        order: AoriOrder,
-        order_hash: B256,
-        seat_id: i64,
-    ) -> Result<AoriTakeOrderParams, Box<dyn std::error::Error>> {
-        let signature = self.signer.sign_hash(order_hash.0.into())?;
-        let sig_hex = hex::encode(signature.to_vec());
 
-        Ok(AoriTakeOrderParams {
+    pub async fn respond(
+        &self,
+        rfq_id: String,
+        order: AoriOrder,
+    ) -> Result<AoriRespondParams, Box<dyn std::error::Error>> {
+
+        let order_hash = get_order_hash(order.clone());
+        let signature: Signature = self.signer.sign_hash_sync(&B256::from_slice(order_hash.as_slice()))?;
+
+        Ok(AoriRespondParams {
+            rfq_id,
             order,
-            signature: format!("0x{}", sig_hex).into(),
-            order_hash: order_hash.to_string(),
-            seat_id: Some(seat_id),
-            signed_approval_tx: None,
+            signature: format!("0x{:?}", signature.as_bytes()).into(),
         })
     }
 }

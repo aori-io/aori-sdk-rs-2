@@ -5,24 +5,14 @@ use jsonrpsee::proc_macros::rpc;
 pub trait AoriBackendRpc {
     #[method(name = "aori_ping")]
     async fn ping(&self, parameters: AoriPingParams) -> RpcResult<String>;
-    #[method(name = "aori_requestQuote")]
-    async fn request_quote(&self, parameters: AoriRequestQuoteParams) -> RpcResult<String>;
-    #[method(name = "aori_cancelOrder")]
-    async fn cancel_order(&self, parameters: AoriCancelOrderParams) -> RpcResult<String>;
-    #[method(name = "aori_cancelAllOrders")]
-    async fn cancel_all_orders(&self, parameters: AoriCancelAllOrdersParams) -> RpcResult<()>;
-    #[method(name = "aori_makeOrder")]
-    async fn make_order(&self, parameters: AoriMakeOrderParams) -> RpcResult<OrderView>;
-    #[method(name = "aori_takeOrder")]
-    async fn take_order(&self, parameters: AoriTakeOrderParams) -> RpcResult<String>;
-    // aori_quote
-    #[method(name = "aori_viewOrderbook")]
-    async fn view_orderbook(&self, parameters: ViewOrderbookQuery) -> RpcResult<Vec<OrderView>>;
+    #[method(name = "aori_rfq")]
+    async fn rfq(&self, parameters: AoriRfqParams) -> RpcResult<String>;
+    #[method(name = "aori_respond")]
+    async fn respond(&self, parameters: AoriRespondParams) -> RpcResult<String>;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{
         builder::AoriRequestBuilder, AoriBackendErrors, AoriBackendRpcClient, AoriPingParams,
     };
@@ -79,11 +69,11 @@ mod tests {
         let api_key = "test".to_string();
 
         let request = builder
-            .build_rfq(input_token, output_token, input_amount, output_amount, chain_id, api_key)
+            .build_full_rfq(None, input_token, output_token, input_amount, output_amount, chain_id)
             .await
             .unwrap();
 
-        let response = client.request_quote(request).await;
+        let response = client.rfq(request).await;
         info!("RFQ RESPONSE: {:?}", response);
         assert!(response.is_ok(), "Expected Ok response, got {:?}", response);
     }

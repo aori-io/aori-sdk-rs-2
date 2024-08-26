@@ -1,21 +1,12 @@
-use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
-use alloy_serde_macro::{
-    bytes_as_string, bytes_from_string, U256_as_String, U256_as_u32, U256_from_String,
-    U256_from_u32,
-};
-use alloy_sol_types::{sol, SolValue};
-use bson::Bson;
+
+use alloy::{primitives::{keccak256, Address, Bytes, B256, U256}, sol, sol_types::SolValue};
 use chrono::Utc;
 use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
-use tracing::error;
 
 use super::{
-    constants::{ChainId, SUPPORTED_AORI_CHAINS},
+    constants::SUPPORTED_AORI_CHAINS,
     get_order_signer,
 };
-
-// abigen!(AoriV2, "src/aori/abi/AoriV2.json");
 
 sol!(AoriV2, "src/abi/AoriV2.json");
 
@@ -25,26 +16,18 @@ sol!(
         address offerer;
         // input
         address inputToken;
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
         uint256 inputAmount;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 inputChainId;
         address inputZone;
         // output
         address outputToken;
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
         uint256 outputAmount;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 outputChainId;
         address outputZone;
         // other
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
         uint256 startTime;
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
         uint256 endTime;
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
         uint256 salt;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 counter;
         bool toWithdraw;
     }
@@ -56,13 +39,10 @@ sol!(
 
         bytes makerSignature;
         bytes takerSignature;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 blockDeadline;
 
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 seatNumber;
         address seatHolder;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 seatPercentOfFees;
     }
 
@@ -71,80 +51,13 @@ sol!(
         bytes makerSignature;
         bytes takerSignature;
 
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 blockDeadline;
 
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 seatNumber;
         address seatHolder;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
         uint256 seatPercentOfFees;
     }
-
-    #[derive(Default, Debug, Deserialize, Serialize)]
-    struct Query {
-        address base;
-        address quote;
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    enum SortBy { createdAtAsc, createdAtDesc, rateAsc, rateDesc }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    struct ViewOrderbookQuery {
-
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-        uint256 chainId;
-
-        Query query;
-        #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-        uint256 limit;
-
-        bytes32 orderHash;
-        address offerer;
-
-        SortBy sortBy;
-
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
-        uint256 inputAmount;
-        #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
-        uint256 outputAmount;
-
-        address zone;
-        bool allowStaleQuotes;
-    }
 );
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct OrderView {
-    pub order_hash: B256,
-    pub offerer: Address,
-
-    pub order: AoriOrder,
-    pub signature: String,
-
-    pub input_token: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
-    pub input_amount: U256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-    pub input_chain_id: U256,
-    pub input_zone: Address,
-    pub output_token: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
-    pub output_amount: U256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-    pub output_chain_id: U256,
-    pub output_zone: Address,
-
-    pub rate: String,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-    pub created_at: U256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
-    pub last_updated_at: U256,
-    pub is_active: bool,
-    pub is_public: bool,
-}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -153,53 +66,24 @@ pub struct DetailsToExecute {
     pub matching: AoriMatchingDetails,
     pub matching_signature: String,
     pub maker_order_hash: B256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
     pub maker_chain_id: U256,
     pub maker_zone: Address,
     pub taker_order_hash: B256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
     pub taker_chain_id: U256,
     pub taker_zone: Address,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
     pub chain_id: U256,
     pub to: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
     pub value: U256,
-    #[serde(serialize_with = "bytes_as_string", deserialize_with = "bytes_from_string")]
     pub data: Vec<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub taker_permit_signature: Option<String>,
     pub maker: Address,
     pub taker: Address,
     pub input_token: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
     pub input_amount: U256,
     pub output_token: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
     pub output_amount: U256,
 }
-
-// TODO: convert to rust
-// export interface SettledMatch {
-//     makerOrderHash?: string;
-//     takerOrderHash?: string;
-//     maker: string;
-//     taker: string;
-//     inputChainId: number;
-//     outputChainId: number;
-//     inputZone: string;
-//     outputZone: string;
-//     inputToken: string;
-//     outputToken: string;
-//     inputAmount: string;
-//     outputAmount: string;
-//     matchingHash: string;
-
-//     // Details from the input chain
-//     transactionHash?: string;
-//     blockNumber?: number;
-//     timestamp?: number;
-// }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -208,17 +92,13 @@ pub struct SettledMatch {
     pub taker_order_hash: B256,
     pub maker: Address,
     pub taker: Address,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
     pub input_chain_id: U256,
-    #[serde(serialize_with = "U256_as_u32", deserialize_with = "U256_from_u32")]
     pub output_chain_id: U256,
     pub input_zone: Address,
     pub output_zone: Address,
     pub input_token: Address,
     pub output_token: Address,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
     pub input_amount: U256,
-    #[serde(serialize_with = "U256_as_String", deserialize_with = "U256_from_String")]
     pub output_amount: U256,
     pub matching_hash: B256,
 
@@ -241,41 +121,6 @@ where
 
 pub fn get_order_hash(order: AoriOrder) -> B256 {
     keccak256(order.abi_encode_packed())
-}
-
-// pub fn get_matching_order(order: AoriOrder) -> AoriOrder {
-
-// }
-
-pub fn to_order_view(
-    order: AoriOrder,
-    signature: String,
-    is_active: bool,
-    is_public: bool,
-) -> OrderView {
-    let order2 = order.clone();
-
-    OrderView {
-        offerer: order.offerer.clone(),
-        signature: signature.clone(),
-        input_token: order.inputToken.clone(),
-        input_amount: order.inputAmount.clone(),
-        input_chain_id: order.inputChainId.clone(),
-        input_zone: order.inputZone.clone(),
-        output_token: order.outputToken.clone(),
-        output_amount: order.outputAmount.clone(),
-        output_chain_id: order.outputChainId.clone(),
-        output_zone: order.outputZone.clone(),
-
-        rate: (order.outputAmount.clone() / order.inputAmount.clone()).to_string(),
-        order: order2,
-        order_hash: get_order_hash(order),
-
-        created_at: U256::from(Utc::now().timestamp()),
-        last_updated_at: U256::from(Utc::now().timestamp()),
-        is_public,
-        is_active,
-    }
 }
 
 pub fn to_details_to_execute(
@@ -349,85 +194,6 @@ pub fn calldata_to_settle_orders(matching: AoriMatchingDetails) -> Vec<u8> {
     calldata
 }
 
-pub fn document_to_order(document: bson::Document) -> anyhow::Result<OrderView> {
-    let bson: Bson = Bson::Document(document);
-    let json: Value = match bson {
-        Bson::Document(document) => {
-            serde_json::to_value(document).expect("Failed to convert Bson to Json")
-        }
-        _ => {
-            let e =
-                std::io::Error::new(std::io::ErrorKind::Other, "Failed to convert Bson to Json");
-            error!("{}", e);
-            return Err(e.into());
-        }
-    };
-
-    println!("{:?}", json);
-
-    // Deserialize the JSON value into the IntermediateRoot struct
-    let order_view: OrderView = match serde_json::from_value(json) {
-        Ok(intermediate) => intermediate,
-        Err(e) => {
-            error!("Failed to deserialize JSON: {}", e);
-            return Err(e.into());
-        }
-    };
-
-    Ok(order_view)
-}
-
-pub fn blank_out_signature(order: OrderView) -> OrderView {
-    let mut order2 = order.clone();
-    order2.signature = "".to_string();
-    order2
-}
-
-// async function validateOrder(order, signature) {
-//     // Check if chain is supported
-//     if (!constants_1.SUPPORTED_AORI_CHAINS.has(order.inputChainId))
-//         return `Input chain ${order.inputChainId} not supported`;
-//     if (!constants_1.SUPPORTED_AORI_CHAINS.has(order.outputChainId))
-//         return `Output chain ${order.outputChainId} not supported`;
-//     if (signature == undefined || signature == "" || signature == null)
-//         return "No signature provided";
-//     if (order.inputToken === order.outputToken && order.inputChainId === order.outputChainId)
-//         return `Input (${order.inputToken}) and output (${order.outputToken}) tokens must be different if they are on the same chain`;
-//     // TODO: reconsider this
-//     if (order.inputAmount == "0")
-//         return `Input amount cannot be zero`;
-//     if (order.outputAmount == "0")
-//         return `Output amount cannot be zero`;
-//     if (!isZoneSupported(order.inputChainId, order.inputZone))
-//         return `Input zone ${order.inputZone} on ${order.inputChainId} not supported`;
-//     if (!isZoneSupported(order.outputChainId, order.outputZone))
-//         return `Output zone ${order.outputZone} on ${order.outputChainId} not supported`;
-//     if (BigInt(order.startTime) > BigInt(order.endTime))
-//         return `Start time (${order.startTime}) cannot be after end (${order.endTime}) time`;
-//     if (BigInt(order.endTime) < BigInt(Math.floor(Date.now() / 1000)))
-//         return `End time (${order.endTime}) cannot be in the past`;
-//     // Verify that the signature of the taker order is valid
-//     let orderMessageSigner;
-//     try {
-//         orderMessageSigner = getOrderSigner(order, signature);
-//     }
-//     catch (e) {
-//         return `Signature signer could not be retrieved: ${e.message}`;
-//     }
-//     try {
-//         // make isValidSignature call too
-//         if (orderMessageSigner.toLowerCase() !== order.offerer.toLowerCase()) {
-//             if (!(await (0, providers_1.isValidSignature)(order.inputChainId, order.offerer, getOrderHash(order), signature))) {
-//                 return `Signature (${signature}) appears to be invalid via calling isValidSignature on ${order.offerer} on chain ${order.inputChainId} - order hash: ${getOrderHash(order)}`;
-//             }
-//         }
-//     }
-//     catch (e) {
-//         return `isValidSignature call failed: ${e.message}`;
-//     }
-//     return null;
-// }
-
 // Note: Some() is used to return an error message if the order is invalid
 pub async fn validate_order(order: AoriOrder, signature: String) -> Result<String, &'static str> {
     let order2 = order.clone();
@@ -478,8 +244,6 @@ pub async fn validate_order(order: AoriOrder, signature: String) -> Result<Strin
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::{keccak256, Address, U256};
-    use alloy_sol_types::SolValue;
     use serde_json;
 
     #[test]
@@ -536,36 +300,4 @@ mod tests {
         let deserialized: AoriOrder = serde_json::from_str(&serialized).unwrap();
         println!("Deserialized AoriOrder: {:?}", deserialized);
     }
-
-    // #[test]
-    // fn serialize_view_orderbook_query() {
-    //     // hash wallet address and sign first
-    //     let key = Wallet::<SigningKey>::random_with(&mut rand::thread_rng());
-    //     let address = key.address().to_string();
-    //     let signature = key.sign_message_sync(address.as_bytes()).unwrap();
-
-    //     let query = ViewOrderbookQuery {
-    //         offerer: "0x0000000000000000000000000000000000000001".parse::<Address>().unwrap(),
-    //         orderHash: alloy_primitives::FixedBytes([0u8; 32]), /* Assuming a 32-byte order hash
-    //                                                              * placeholder */
-    //         query: Query {
-    //             base: "0x0000000000000000000000000000000000000002".parse::<Address>().unwrap(),
-    //             quote: "0x0000000000000000000000000000000000000003".parse::<Address>().unwrap(),
-    //         },
-    //         chainId: U256::from(1),
-    //         sortBy: SortBy::createdAtAsc,
-    //         inputAmount: U256::from(1000000000000000000_u64),
-    //         outputAmount: U256::from(2000000000000000000_u64),
-    //         limit: U256::from(10),
-    //         zone: "0x0000000000000000000000000000000000000004".parse::<Address>().unwrap(),
-    //         allowStaleQuotes: false,
-    //     };
-
-    //     let serialized = serde_json::to_string(&query).unwrap();
-    //     println!("Serialized ViewOrderbookQuery: {}", serialized);
-
-    //     // Deserialize the query
-    //     let deserialized: ViewOrderbookQuery = serde_json::from_str(&serialized).unwrap();
-    //     println!("Deserialized ViewOrderbookQuery: {:?}", deserialized);
-    // }
 }

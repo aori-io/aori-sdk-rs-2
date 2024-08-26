@@ -1,9 +1,5 @@
-use crate::{shared_types::AoriOrder, SettledMatch};
-use alloy_primitives::U256;
-use alloy_serde_macro::U256_from_u64;
+use crate::{shared_types::AoriOrder, DetailsToExecute, SettledMatch};
 use serde::{Deserialize, Serialize};
-
-use super::{DetailsToExecute, OrderView};
 
 #[derive(Default, Serialize, Deserialize, Debug)]
 pub struct AoriPingResponse {
@@ -11,62 +7,28 @@ pub struct AoriPingResponse {
     pub result: String,
 }
 
-#[derive(Default, Serialize, Deserialize, Debug)]
-pub struct AoriAuthResponse {
-    pub auth: String,
+#[serde(rename_all = "camelCase")]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
+pub struct QuoteRequestedData {
+    pub rfq_id: String,
+    pub address: String,
+    pub input_token: String,
+    pub output_token: String,
+    pub input_amount: String,
+    pub zone: String,
+    pub chain_id: u64,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriOrderbookData {
-    pub orders: Vec<OrderView>,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriViewOrderbookResponse {
-    pub id: i64,
-    pub result: AoriOrderbookData,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriCancelOrderResponse {
-    pub id: i64,
-    pub result: OrderView,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriCancelAllOrdersResponse {
-    pub id: i64,
-    pub result: Vec<OrderView>,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriAccountBalanceResponse {
-    pub id: i64,
-    pub result: String,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriAccountOrdersResponse {
-    pub id: i64,
-    pub result: Vec<OrderView>,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriRequestQuoteResponse {
-    pub id: i64,
-    pub result: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AoriMakeOrderResponse {
-    pub id: i64,
-    pub result: OrderView,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AoriTakeOrderResponse {
-    pub id: i64,
-    pub result: DetailsToExecute,
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct QuoteReceivedData {
+    pub rfq_id: String,
+    pub input_token: String,
+    pub output_token: String,
+    pub input_amount: String,
+    pub output_amount: String,
+    pub zone: String,
+    pub chain_id: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -94,23 +56,12 @@ pub struct AoriFeedEventWrapper {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(tag = "type", content = "data")]
 pub enum AoriFeedEvents {
-    OrderToExecute(Box<OrderToExecuteData>),
-    SwapRequested(Box<OrderView>),
     QuoteRequested(Box<QuoteRequestedData>),
-    OrderCreated(Box<OrderView>),
-    OrderTaken(Box<OrderView>),
-    OrderCancelled(Box<OrderView>),
+    QuoteReceived(Box<QuoteReceivedData>),
+    CalldataToExecute(Box<CalldataToExecuteData>),
     OrderFulfilled(Box<SettledMatch>)
 }
 
-#[derive(Clone, Serialize, Deserialize, PartialEq, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct QuoteRequestedData {
-    pub input_token: String,
-    pub output_token: String,
-    pub input_amount: String,
-    pub chain_id: u64,
-}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -127,27 +78,11 @@ pub struct MatchingOrder {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OrderToExecuteData {
-    pub matching_hash: String,
-    pub matching: MatchingOrder,
-    pub matching_signature: String,
-    pub maker_order_hash: String,
-    pub maker_chain_id: u64,
-    pub maker_zone: String,
-    pub taker_order_hash: String,
-    pub taker_chain_id: u64,
-    pub taker_zone: String,
-    pub chain_id: u64,
-    pub to: String,
-    pub value: U256,
-    pub data: String,
-    pub maker: String,
-    pub taker: String,
-    pub input_token: String,
-    pub input_amount: String,
-    pub output_token: String,
-    pub output_amount: String,
+pub struct CalldataToExecuteData {
+    pub rfq_id: String,
+    pub data: DetailsToExecute,
 }
+
 
 pub fn deserialize_aori_feed_event(json_data: &str) -> Result<AoriFeedEvents, serde_json::Error> {
     let wrapper = serde_json::from_str::<AoriFeedEventWrapper>(json_data)?;

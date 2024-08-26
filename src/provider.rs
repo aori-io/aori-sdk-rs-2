@@ -3,9 +3,8 @@ use jsonrpsee::{
     proc_macros::rpc,
 };
 use serde::{Deserialize, Serialize};
-use tokio_tungstenite::tungstenite::http::method;
 
-use super::{AoriPingParams, AoriPingResponse};
+use super::AoriPingParams;
 
 #[derive(Clone)]
 pub struct ProviderClient {

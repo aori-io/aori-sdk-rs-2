@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use alloy_primitives::U256;
+use alloy::primitives::U256;
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub enum ChainId {
