@@ -55,7 +55,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_rfq() {
-        let url = "https://v2.api.aori.io";
+        let url = "https://rfq.aori.io";
         let client = HttpClientBuilder::default().build(url).unwrap();
 
         let pkey = "0000000000000000000000000000000000000000000000000000000000000001";
@@ -63,13 +63,12 @@ mod tests {
 
         let input_token = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2".to_string();
         let output_token = "0xe3DBC4F88EAa632DDF9708732E2832EEaA6688AB".to_string();
-        let input_amount = Some("1000000000000000000".to_string());
-        let output_amount = None;
+        let input_amount = "1000000000000000000".to_string();
+        let output_amount = "1000000000000000000".to_string();
         let chain_id = 42161;
-        let api_key = "test".to_string();
 
         let request = builder
-            .build_full_rfq(None, input_token, output_token, input_amount, output_amount, chain_id)
+            .build_full_rfq(None, input_token, output_token, input_amount, output_amount, chain_id, None)
             .await
             .unwrap();
 

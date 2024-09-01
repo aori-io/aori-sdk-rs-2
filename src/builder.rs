@@ -1,9 +1,11 @@
 // request builder
 // used for signing orders and stuff
 
-use alloy::{primitives::{Address, B256}, signers::{local::PrivateKeySigner, Signature, SignerSync}};
+use std::str::FromStr;
 
-use crate::{request::*, sign_order, AoriOrder};
+use alloy::{primitives::{Address, B256, U256}, signers::{local::PrivateKeySigner, Signature, SignerSync}};
+
+use crate::{create_limit_order, request::*, sign_order, AoriOrder};
 
 use super::get_order_hash;
 
@@ -24,9 +26,9 @@ impl AoriRequestBuilder {
         address: Option<Address>,
         input_token: String,
         output_token: String,
-        input_amount: Option<String>,
+        input_amount: String,
         output_amount: Option<String>,
-        chain_id: i64,
+        chain_id: u64,
     ) -> Result<AoriRfqParams, Box<dyn std::error::Error>> {
         Ok(AoriRfqParams::Partial(AoriRfqPartialRequestParams {
             address: address.unwrap_or(self.signer.address()).to_string(),
@@ -46,16 +48,27 @@ impl AoriRequestBuilder {
         address: Option<Address>,
         input_token: String,
         output_token: String,
-        input_amount: Option<String>,
-        output_amount: Option<String>,
-        chain_id: i64,
+        input_amount: String,
+        output_amount: String,
+        chain_id: u64,
+        seat_id: Option<u64>,
     ) -> Result<AoriRfqParams, Box<dyn std::error::Error>> {
-        Ok(AoriRfqParams::Full(AoriRfqFullRequestParams {
 
-            // TODO: make an order order from 
-            order: AoriOrder::default(),
-            signature: "".to_string(),
-            seat_id: None,
+        let order = create_limit_order(
+            address.unwrap_or(self.signer.address()),
+            Address::from_str(&input_token).unwrap(),
+            Address::from_str(&output_token).unwrap(),
+            U256::from_str(&input_amount).unwrap(),
+            U256::from_str(&output_amount).unwrap(),
+            chain_id
+        );
+
+        let signature = sign_order(&self.signer, order.clone()).await.unwrap();
+
+        Ok(AoriRfqParams::Full(AoriRfqFullRequestParams {
+            order,
+            signature,
+            seat_id: Some(seat_id.unwrap_or(0)),
         }))
     }
 

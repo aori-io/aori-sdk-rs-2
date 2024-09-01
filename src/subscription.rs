@@ -4,23 +4,19 @@ use reqwest::Client;
 use serde_json::Value;
 
 pub enum SubscriptionEvents {
-    OrderCreated,
-    OrderCancelled,
-    OrderTaken,
-    OrderFulfilled,
-    OrderToExecute,
     QuoteRequested,
+    QuoteReceived,
+    CalldataToExecute,
+    TradeSettled,
 }
 
 impl ToString for SubscriptionEvents {
     fn to_string(&self) -> String {
         match self {
-            SubscriptionEvents::OrderCreated => "OrderCreated",
-            SubscriptionEvents::OrderCancelled => "OrderCancelled",
-            SubscriptionEvents::OrderTaken => "OrderTaken",
-            SubscriptionEvents::OrderFulfilled => "OrderFulfilled",
-            SubscriptionEvents::OrderToExecute => "OrderToExecute",
             SubscriptionEvents::QuoteRequested => "QuoteRequested",
+            SubscriptionEvents::QuoteReceived => "QuoteReceived",
+            SubscriptionEvents::CalldataToExecute => "CalldataToExecute",
+            SubscriptionEvents::TradeSettled => "TradeSettled",
         }
         .to_string()
     }

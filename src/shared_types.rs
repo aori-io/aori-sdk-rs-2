@@ -1,7 +1,10 @@
 
 use alloy::{primitives::{keccak256, Address, Bytes, B256, U256}, sol, sol_types::SolValue};
 use chrono::Utc;
+use rand::random;
 use serde::{Deserialize, Deserializer, Serialize};
+
+use crate::constants::{ChainId, AORI_V2_SINGLE_CHAIN_ZONE_ADDRESSES};
 
 use super::{
     constants::SUPPORTED_AORI_CHAINS,
@@ -119,6 +122,38 @@ where
     Ok(rate.to_string())
 }
 
+pub fn get_zone_address(chain_id: u64) -> Address {
+    // Gets first address from the set of zone addresses for the given chain id
+    let chain_id = ChainId::from(chain_id);
+    AORI_V2_SINGLE_CHAIN_ZONE_ADDRESSES().get(&chain_id).unwrap().iter().next().unwrap().parse::<Address>().unwrap()
+}
+
+pub fn create_limit_order(
+    offerer: Address,
+    input_token: Address,
+    output_token: Address,
+    input_amount: U256,
+    output_amount: U256,
+    chain_id: u64,
+) -> AoriOrder {
+    AoriOrder {
+        offerer,
+        inputToken: input_token,
+        inputAmount: input_amount,
+        inputChainId: U256::from(chain_id),
+        inputZone: get_zone_address(chain_id),
+        outputToken: output_token,
+        outputAmount: output_amount,
+        outputChainId: U256::from(chain_id),
+        outputZone: get_zone_address(chain_id),
+        counter: U256::ZERO,
+        startTime: U256::from(Utc::now().timestamp() - 300), // 5 mins ago in seconds
+        endTime: U256::from(Utc::now().timestamp() + 604800), // 1 week from now in seconds
+        salt: U256::from(random::<u64>()), // TODO: randomly generate
+        toWithdraw: false,
+    }
+}
+
 pub fn get_order_hash(order: AoriOrder) -> B256 {
     keccak256(order.abi_encode_packed())
 }
@@ -188,7 +223,6 @@ pub fn get_matching_hash(
 }
 
 pub fn calldata_to_settle_orders(matching: AoriMatchingDetails) -> Vec<u8> {
-    // TODO: fix
     let mut calldata = Vec::new();
     calldata.extend(matching.abi_encode_packed());
     calldata

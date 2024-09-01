@@ -27,6 +27,29 @@ pub enum ChainId {
     BerachainArtio = 80085,
 }
 
+impl From<u64> for ChainId {
+    fn from(value: u64) -> Self {
+        match value {
+            1 => ChainId::Ethereum,
+            10 => ChainId::Optimism,
+            56 => ChainId::Bsc,
+            100 => ChainId::Gnosis,
+            137 => ChainId::Polygon,
+            250 => ChainId::Fantom,
+            42161 => ChainId::Arbitrum,
+            43114 => ChainId::Avalanche,
+            81457 => ChainId::Blast,
+            1287 => ChainId::Base,
+            11155111 => ChainId::Sepolia,
+            421611 => ChainId::ArbitrumNova,
+            43113 => ChainId::AvalancheFuji,
+            80085 => ChainId::BerachainArtio,
+            _ => panic!("Invalid chain id"),
+        }
+    }
+}
+
+
 pub fn AORI_V2_SINGLE_CHAIN_ZONE_ADDRESSES() -> HashMap<ChainId, HashSet<String>> {
     HashMap::from([
         (ChainId::Optimism, HashSet::from(["0x0AD86842EadEe5b484E31db60716EB6867B46e21".to_string()])),

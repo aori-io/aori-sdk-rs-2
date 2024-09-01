@@ -10,14 +10,13 @@ pub struct AoriRfqPartialRequestParams {
     pub address: String,
     pub input_token: String,
     pub output_token: String,
-    #[serde(skip_serializing_if = "Option::is_none", rename = "inputAmount")]
-    pub input_amount: Option<String>,
+    pub input_amount: String,
     #[serde(skip_serializing_if = "Option::is_none", rename = "outputAmount")]
     pub output_amount: Option<String>,
     pub zone: Option<String>,
     #[serde(rename = "chainId")]
-    pub chain_id: i64,
-    pub deadline: Option<i64>,
+    pub chain_id: u64,
+    pub deadline: Option<u64>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -25,7 +24,7 @@ pub struct AoriRfqFullRequestParams {
     pub order: AoriOrder,
     pub signature: String,
     #[serde(skip_serializing_if = "Option::is_none", rename = "seatId")]
-    pub seat_id: Option<i64>,
+    pub seat_id: Option<u64>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
