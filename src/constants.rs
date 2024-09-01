@@ -67,6 +67,9 @@ pub fn SUPPORTED_AORI_CHAINS() -> HashSet<U256> {
     )
 }
 
+pub const AORI_HTTP_RFQ_URL: &str = "https://rfq.aori.io";
+pub const AORI_WS_RFQ_URL: &str = "wss://rfq.aori.io";
+
 pub const DEFAULT_ZONE: &str = "0x0AD86842EadEe5b484E31db60716EB6867B46e21";
 pub const DEFAULT_ZONEHASH: &str =
     "0x0000000000000000000000000000000000000000000000000000000000000000";
