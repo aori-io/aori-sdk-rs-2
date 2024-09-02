@@ -38,9 +38,9 @@ pub enum EventData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SubscriptionEventData {
     #[serde(rename = "rfqId")]
-    rfq_id: String,
-    r#type: SubscriptionEvents,
-    data: EventData
+    pub rfq_id: String,
+    pub r#type: SubscriptionEvents,
+    pub data: EventData
 }
 
 pub async fn broadcast_subscription_event(event: SubscriptionEvents, data: serde_json::Value) {
