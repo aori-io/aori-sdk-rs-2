@@ -85,9 +85,8 @@ pub enum AoriRequest {
     Respond(AoriRespondRequest),
 }
 
-// TODO: rename from AoriRequestin to AoriGeneralRequest
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AoriRequestin {
+pub struct AoriGeneralRequest {
     pub id: i64,
     pub jsonrpc: String,
     pub method: String,

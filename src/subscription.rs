@@ -1,8 +1,13 @@
 use std::env;
 
+use alloy::primitives::{Address, U256};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::{DetailsToExecute, SettledMatch, QuoteReceivedData, CalldataToExecuteData, QuoteRequestedData};
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum SubscriptionEvents {
     QuoteRequested,
     QuoteReceived,
@@ -20,6 +25,22 @@ impl ToString for SubscriptionEvents {
         }
         .to_string()
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum EventData {
+    QuoteRequested(QuoteReceivedData),
+    QuoteReceived(QuoteReceivedData),
+    CalldataToExecute(CalldataToExecuteData),
+    TradeSettled(SettledMatch),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SubscriptionEventData {
+    #[serde(rename = "rfqId")]
+    rfq_id: String,
+    r#type: SubscriptionEvents,
+    data: EventData
 }
 
 pub async fn broadcast_subscription_event(event: SubscriptionEvents, data: serde_json::Value) {
@@ -43,3 +64,4 @@ pub async fn broadcast_subscription_event(event: SubscriptionEvents, data: serde
         .send()
         .await;
 }
+

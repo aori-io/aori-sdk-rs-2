@@ -80,7 +80,7 @@ pub struct MatchingOrder {
 #[serde(rename_all = "camelCase")]
 pub struct CalldataToExecuteData {
     pub rfq_id: String,
-    pub data: DetailsToExecute,
+    pub details_to_execute: DetailsToExecute,
 }
 
 
