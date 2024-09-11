@@ -39,7 +39,7 @@ pub enum EventData {
 pub struct SubscriptionEventData {
     #[serde(rename = "rfqId")]
     pub rfq_id: String,
-    pub r#type: SubscriptionEvents,
+    pub event: SubscriptionEvents,
     pub data: EventData
 }
 
