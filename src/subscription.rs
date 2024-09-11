@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::{DetailsToExecute, SettledMatch, QuoteReceivedData, CalldataToExecuteData, QuoteRequestedData};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SubscriptionEvents {
     QuoteRequested,
     QuoteReceived,
@@ -27,7 +27,7 @@ impl ToString for SubscriptionEvents {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum EventData {
     QuoteRequested(QuoteReceivedData),
     QuoteReceived(QuoteReceivedData),
@@ -35,7 +35,7 @@ pub enum EventData {
     TradeSettled(SettledMatch),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SubscriptionEventData {
     #[serde(rename = "rfqId")]
     pub rfq_id: String,
