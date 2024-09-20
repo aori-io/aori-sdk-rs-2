@@ -1,10 +1,11 @@
 use jsonrpsee::{core::ClientError, types::ErrorObject};
 use thiserror::Error;
 use tracing::error;
+use serde::Serialize;
 
 // shoutout chatgpt ^^
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize)]
 pub enum AoriBackendErrors {
     #[error("Your JSON-RPC payload data doesn't fit into the correct format")]
     IncorrectRequestFormat(),
