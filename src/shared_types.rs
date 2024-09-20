@@ -275,6 +275,61 @@ pub async fn validate_order(order: AoriOrder, signature: String) -> Result<Strin
     return Ok(order_message_signer.to_string());
 }
 
+pub fn validate_maker_order_matches_taker_order(maker_order: &AoriOrder, taker_order: &AoriOrder) -> Option<String> {
+    if taker_order.inputChainId != maker_order.outputChainId {
+        return Some(format!("Taker order is on chain {} but maker order is on chain {}", taker_order.inputChainId, maker_order.outputChainId));
+    }
+    if taker_order.outputChainId != maker_order.inputChainId {
+        return Some(format!("Taker order is on chain {} but maker order is on chain {}", taker_order.outputChainId, maker_order.inputChainId));
+    }
+    if taker_order.inputZone != maker_order.outputZone {
+        return Some(format!("Taker order is on zone {} but maker order is on zone {}", taker_order.inputZone, maker_order.outputZone));
+    }
+    if taker_order.outputZone != maker_order.inputZone {
+        return Some(format!("Taker order is on zone {} but maker order is on zone {}", taker_order.outputZone, maker_order.inputZone));
+    }
+
+    // Verify that the takerOrder and the makerOrder use the same token
+    if taker_order.inputToken != maker_order.outputToken {
+        return Some(format!("Taker order is on token {} but maker order is on token {}", taker_order.inputToken, maker_order.outputToken));
+    }
+    if taker_order.outputToken != maker_order.inputToken {
+        return Some(format!("Taker order is on token {} but maker order is on token {}", taker_order.outputToken, maker_order.inputToken));
+    }
+
+    // Check that the maker and taker orders have enough inputAmounts
+    if taker_order.inputAmount < maker_order.outputAmount {
+        return Some("Taker order has insufficient input amount to meet maker order's output amount".to_string());
+    }
+    if maker_order.inputAmount < taker_order.outputAmount {
+        return Some("Maker order has insufficient input amount to meet taker order's output amount".to_string());
+    }
+
+    None
+}
+
+pub fn get_amount_with_fee(amount: impl Into<U256>) -> U256 {
+    let base: U256 = U256::from(1_000_000);
+    let fee: U256 = U256::from(300);
+
+    // Convert the amount to U256, then perform the calculation
+    let amount_u256: U256 = amount.into();
+    
+    // amount * (base + fee) / base
+    (amount_u256 * (base + fee)) / base
+}
+
+pub fn get_seat_percentage_of_fees(seat_score: usize) -> U256 {
+    let percentages = vec![0, 40, 45, 50, 55, 60];
+
+    // Make sure seat_score is within bounds
+    if seat_score < percentages.len() {
+        U256::from(percentages[seat_score])
+    } else {
+        panic!("seat_score out of bounds")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
